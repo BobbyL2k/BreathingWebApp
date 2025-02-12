@@ -47,6 +47,7 @@
             display: flex;
             align-items: center;
             margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
         .config-row label {
@@ -65,12 +66,12 @@
         .radio-row {
             display: flex;
             align-items: center;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
         }
 
         .radio-group {
             display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
         }
 
@@ -180,6 +181,8 @@
                 <div class="radio-group">
                     <input type="radio" id="cyclesMode" name="mode" value="cycles" checked />
                     <label for="cyclesMode"># of Cycles</label>
+                </div>
+                <div class="radio-group">
                     <input type="radio" id="durationMode" name="mode" value="duration" />
                     <label for="durationMode">Total Duration</label>
                 </div>
@@ -248,12 +251,22 @@
             if (cyclesModeRadio.checked) {
                 const numCycles = parseInt(cyclesInput.value, 10) || 0;
                 const totalDurationSec = Math.floor(cycleDuration * numCycles);
-                summaryText.textContent = `You will perform ${numCycles} cycle(s) (${totalDurationSec} sec total).`;
+                if (numCycles > 1) {
+                    summaryText.textContent = `You will perform ${numCycles} cycles (${totalDurationSec} sec total).`;
+                } else {
+                    summaryText.textContent = `You will perform ${numCycles} cycle (${totalDurationSec} sec total).`;
+                }
+                durationInput.value = totalDurationSec;
             } else {
                 const totalDurationInput = parseFloat(durationInput.value) || 0;
-                const totalDurationSec = Math.floor(totalDurationInput);
                 const numCyclesCalc = cycleDuration > 0 ? Math.floor(totalDurationInput / cycleDuration) : 0;
-                summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycle(s)).`;
+                const totalDurationSec = numCyclesCalc * cycleDuration;
+                if (numCycles > 1) {
+                    summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycles).`;
+                } else {
+                    summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycle).`;
+                }
+                cyclesInput.value = numCyclesCalc;
             }
         }
 
