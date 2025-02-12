@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guided Breathing Exercise</title>
+    <style>
+        /* Global resets and container */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        /* Configuration Panel */
+        #config {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto 20px auto;
+        }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .config-row label {
+            width: 190px;
+            font-weight: bold;
+        }
+
+        .config-row input[type="number"] {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        /* Exercise Type row uses its own inner container to avoid overflow */
+        .radio-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .radio-group label {
+            font-weight: normal;
+            margin-left: 4px;
+        }
+
+        /* Exercise Panel */
+        #exercise {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #visualContainer {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        /* Guidance outlines for min and max sizes */
+        .boundary {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 2px dashed #bbb;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        #minBoundary {
+            width: 50px;
+            height: 50px;
+        }
+
+        #maxBoundary {
+            width: 250px;
+            height: 250px;
+        }
+
+        /* Animated Circle (Modern flat design) */
+        #circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            background: #4a90e2;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Text display */
+        #phaseText,
+        #cycleCounter {
+            font-size: 1.5em;
+            margin: 10px;
+        }
+
+        /* Buttons */
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: #4a90e2;
+            color: #fff;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #357ab8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Configuration Panel -->
+        <div id="config">
+            <h1>Configure Your Breathing Exercise</h1>
+            <div class="config-row">
+                <label for="inhale">Inhale Duration (sec):</label>
+                <input type="number" id="inhale" value="4" min="1" step="0.5" />
+            </div>
+            <div class="config-row">
+                <label for="holdInhale">Hold after Inhale (sec):</label>
+                <input type="number" id="holdInhale" value="3" min="0" step="0.5" />
+            </div>
+            <div class="config-row">
+                <label for="exhale">Exhale Duration (sec):</label>
+                <input type="number" id="exhale" value="8" min="1" step="0.5" />
+            </div>
+            <div class="config-row">
+                <label for="holdExhale">Hold after Exhale (sec):</label>
+                <input type="number" id="holdExhale" value="0" min="0" step="0.5" />
+            </div>
+            <div class="config-row radio-row">
+                <label>Exercise Type:</label>
+                <div class="radio-group">
+                    <input type="radio" id="cyclesMode" name="mode" value="cycles" checked />
+                    <label for="cyclesMode"># of Cycles</label>
+                    <input type="radio" id="durationMode" name="mode" value="duration" />
+                    <label for="durationMode">Total Duration</label>
+                </div>
+            </div>
+            <div class="config-row" id="cyclesInput">
+                <label for="cycles">Number of cycles:</label>
+                <input type="number" id="cycles" value="4" min="1" />
+            </div>
+            <div class="config-row" id="durationInput" style="display: none;">
+                <label for="duration">Total Duration (sec):</label>
+                <input type="number" id="duration" value="60" min="1" />
+            </div>
+            <div class="config-row" id="summary">
+                <p id="summaryText"></p>
+            </div>
+            <div class="config-row">
+                <button id="startButton">Start Exercise</button>
+            </div>
+        </div>
+
+        <!-- Exercise Panel -->
+        <div id="exercise">
+            <div id="visualContainer">
+                <!-- Animated Circle -->
+                <div id="circle"></div>
+                <!-- Guidance boundaries -->
+                <div id="minBoundary" class="boundary"></div>
+                <div id="maxBoundary" class="boundary"></div>
+            </div>
+            <div id="phaseText"></div>
+            <div id="cycleCounter"></div>
+            <div>
+                <button id="pauseButton">Pause</button>
+                <button id="cancelButton">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /*****************
+         * CONFIGURATION *
+         *****************/
+        const configDiv = document.getElementById("config");
+        const exerciseDiv = document.getElementById("exercise");
+        const inhaleInput = document.getElementById("inhale");
+        const holdInhaleInput = document.getElementById("holdInhale");
+        const exhaleInput = document.getElementById("exhale");
+        const holdExhaleInput = document.getElementById("holdExhale");
+        const cyclesModeRadio = document.getElementById("cyclesMode");
+        const durationModeRadio = document.getElementById("durationMode");
+        const cyclesInput = document.getElementById("cycles");
+        const durationInput = document.getElementById("duration");
+        const cyclesInputDiv = document.getElementById("cyclesInput");
+        const durationInputDiv = document.getElementById("durationInput");
+        const summaryText = document.getElementById("summaryText");
+        const startButton = document.getElementById("startButton");
+
+        // Update the summary display using floored (rounded down) values.
+        function updateSummary() {
+            const inhale = parseFloat(inhaleInput.value) || 0;
+            const holdInhale = parseFloat(holdInhaleInput.value) || 0;
+            const exhale = parseFloat(exhaleInput.value) || 0;
+            const holdExhale = parseFloat(holdExhaleInput.value) || 0;
+            const cycleDuration = inhale + holdInhale + exhale + holdExhale;
+
+            if (cyclesModeRadio.checked) {
+                const numCycles = parseInt(cyclesInput.value, 10) || 0;
+                const totalDurationSec = Math.floor(cycleDuration * numCycles);
+                summaryText.textContent = `You will perform ${numCycles} cycle(s) (${totalDurationSec} sec total).`;
+            } else {
+                const totalDurationInput = parseFloat(durationInput.value) || 0;
+                const totalDurationSec = Math.floor(totalDurationInput);
+                const numCyclesCalc = cycleDuration > 0 ? Math.floor(totalDurationInput / cycleDuration) : 0;
+                summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycle(s)).`;
+            }
+        }
+
+        [inhaleInput, holdInhaleInput, exhaleInput, holdExhaleInput, cyclesInput, durationInput].forEach(
+            (el) => el.addEventListener("input", updateSummary)
+        );
+
+        [cyclesModeRadio, durationModeRadio].forEach((radio) => {
+            radio.addEventListener("change", () => {
+                if (cyclesModeRadio.checked) {
+                    cyclesInputDiv.style.display = "flex";
+                    durationInputDiv.style.display = "none";
+                } else {
+                    cyclesInputDiv.style.display = "none";
+                    durationInputDiv.style.display = "flex";
+                }
+                updateSummary();
+            });
+        });
+
+        updateSummary();
+
+        /*********************
+         * EXERCISE LOGIC    *
+         *********************/
+        const circle = document.getElementById("circle");
+        const phaseText = document.getElementById("phaseText");
+        const cycleCounter = document.getElementById("cycleCounter");
+        const pauseButton = document.getElementById("pauseButton");
+        const cancelButton = document.getElementById("cancelButton");
+
+        // Define min and max sizes (must match the guidance boundaries)
+        const minSize = 50;   // in pixels
+        const maxSize = 250;  // in pixels
+
+        let phases = [];           // Array of phases for one cycle.
+        let totalCycles = 0;       // Total cycles to perform.
+        let currentCycle = 1;
+        let currentPhaseIndex = 0;
+        let currentPhaseRemaining = 0; // seconds remaining in current phase.
+        let currentPhaseDuration = 0;  // full duration of current phase.
+        let lastTimestamp = null;
+        let isPaused = false;
+        let animationFrameId = null;
+
+        startButton.addEventListener("click", startExercise);
+        pauseButton.addEventListener("click", togglePause);
+        cancelButton.addEventListener("click", cancelExercise);
+
+        function startExercise() {
+            const inhale = parseFloat(inhaleInput.value) || 0;
+            const holdInhale = parseFloat(holdInhaleInput.value) || 0;
+            const exhale = parseFloat(exhaleInput.value) || 0;
+            const holdExhale = parseFloat(holdExhaleInput.value) || 0;
+
+            // Build the phases for one cycle.
+            phases = [
+                { name: "Inhale", duration: inhale, type: "inhale" },
+                { name: "Hold (after inhale)", duration: holdInhale, type: "holdFull" },
+                { name: "Exhale", duration: exhale, type: "exhale" },
+                { name: "Hold (after exhale)", duration: holdExhale, type: "holdEmpty" }
+            ];
+
+            const cycleTime = phases.reduce((sum, phase) => sum + phase.duration, 0);
+            if (cyclesModeRadio.checked) {
+                totalCycles = parseInt(cyclesInput.value, 10) || 0;
+            } else {
+                const totalDurationInput = parseFloat(durationInput.value) || 0;
+                totalCycles = Math.max(1, Math.floor(totalDurationInput / cycleTime));
+            }
+
+            currentCycle = 1;
+            currentPhaseIndex = 0;
+            currentPhaseDuration = phases[0].duration;
+            currentPhaseRemaining = currentPhaseDuration;
+            isPaused = false;
+            pauseButton.textContent = "Pause";
+
+            configDiv.style.display = "none";
+            exerciseDiv.style.display = "flex";
+
+            // Reset circle to min size.
+            updateCircle("reset", 0);
+
+            phaseText.textContent = phases[0].name;
+            cycleCounter.textContent = `Cycle ${currentCycle} of ${totalCycles}`;
+
+            lastTimestamp = null;
+            animationFrameId = requestAnimationFrame(step);
+        }
+
+        function step(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const deltaTime = (timestamp - lastTimestamp) / 1000;
+            lastTimestamp = timestamp;
+
+            if (!isPaused) {
+                currentPhaseRemaining -= deltaTime;
+                let progress = 1 - (currentPhaseRemaining / currentPhaseDuration);
+                progress = Math.min(Math.max(progress, 0), 1);
+                const phaseType = phases[currentPhaseIndex].type;
+                updateCircle(phaseType, progress);
+
+                phaseText.textContent =
+                    phases[currentPhaseIndex].name +
+                    (currentPhaseRemaining > 0
+                        ? ` (${currentPhaseRemaining.toFixed(1)} sec)`
+                        : "");
+
+                if (currentPhaseRemaining <= 0) {
+                    const extra = -currentPhaseRemaining;
+                    currentPhaseIndex++;
+                    if (currentPhaseIndex >= phases.length) {
+                        if (currentCycle >= totalCycles) {
+                            finishExercise();
+                            return;
+                        } else {
+                            currentCycle++;
+                            currentPhaseIndex = 0;
+                            cycleCounter.textContent = `Cycle ${currentCycle} of ${totalCycles}`;
+                        }
+                    }
+                    currentPhaseDuration = phases[currentPhaseIndex].duration;
+                    currentPhaseRemaining = currentPhaseDuration - extra;
+                    phaseText.textContent = phases[currentPhaseIndex].name;
+                }
+            }
+            animationFrameId = requestAnimationFrame(step);
+        }
+
+        // Update the circle’s size based on the current phase and progress.
+        function updateCircle(phaseType, progress) {
+            let size;
+            if (phaseType === "inhale") {
+                size = minSize + (maxSize - minSize) * progress;
+            } else if (phaseType === "exhale") {
+                size = maxSize - (maxSize - minSize) * progress;
+            } else if (phaseType === "holdFull") {
+                size = maxSize;
+            } else if (phaseType === "holdEmpty") {
+                size = minSize;
+            } else if (phaseType === "reset") {
+                size = minSize;
+            }
+            circle.style.width = size + "px";
+            circle.style.height = size + "px";
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            pauseButton.textContent = isPaused ? "Resume" : "Pause";
+            if (!isPaused) {
+                lastTimestamp = performance.now();
+            }
+        }
+
+        function cancelExercise() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            exerciseDiv.style.display = "none";
+            configDiv.style.display = "block";
+        }
+
+        function finishExercise() {
+            cancelAnimationFrame(animationFrameId);
+            phaseText.textContent = "Great job! Exercise complete.";
+            pauseButton.style.display = "none";
+            setTimeout(() => {
+                exerciseDiv.style.display = "none";
+                configDiv.style.display = "block";
+                pauseButton.textContent = "Pause";
+                pauseButton.style.display = "inline-block";
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
