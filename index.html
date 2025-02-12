@@ -265,7 +265,7 @@
                 const totalDurationInput = parseFloat(durationInput.value) || 0;
                 const numCyclesCalc = cycleDuration > 0 ? Math.floor(totalDurationInput / cycleDuration) : 0;
                 const totalDurationSec = numCyclesCalc * cycleDuration;
-                if (numCycles > 1) {
+                if (numCyclesCalc > 1) {
                     summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycles).`;
                 } else {
                     summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycle).`;
