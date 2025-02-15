@@ -51,20 +51,6 @@
             --dashed-border: #777;
         }
 
-
-        /* @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #1e1e1e;
-                --text-color: #e0e0e0;
-                --container-bg: #2a2a2a;
-                --container-shadow: rgba(0, 0, 0, 0.3);
-                --input-border: #555;
-                --button-bg: #579aff;
-                --button-hover: #4078c0;
-                --dashed-border: #777;
-            }
-        } */
-
         .container {
             width: 100%;
             max-width: 1200px;
@@ -554,26 +540,40 @@
             });
         }
 
+        // Get reference to the toggle button once
         const toggleBtn = document.getElementById('toggle-theme');
+
+        // Central function to update theme and button label
+        function updateTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            // Set button label to indicate the opposite action
+            toggleBtn.innerHTML = (theme === 'dark') ? "Light Mode" : "Dark Mode";
+            localStorage.setItem('theme', theme);
+        }
+
+        // Detect OS color scheme
+        function applyThemeBasedOnOS() {
+            const osTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+                ? 'dark'
+                : 'light';
+            updateTheme(osTheme);
+        }
+
+        // Toggle theme on button click
         toggleBtn.addEventListener('click', () => {
-            let currentTheme = document.documentElement.getAttribute('data-theme');
-            let newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
-            if (newTheme === 'dark') {
-                toggleBtn.innerHTML = "Light Mode"
-            }else{
-                toggleBtn.innerHTML = "Dark Mode"
-            }
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme); // Store preference
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+            updateTheme(newTheme);
         });
 
         // Load user preference on page load
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
-            document.documentElement.setAttribute('data-theme', storedTheme);
+            updateTheme(storedTheme);
         } else {
             applyThemeBasedOnOS();
         }
+
     </script>
 </body>
 
