@@ -19,13 +19,51 @@
             margin: 0;
             padding: 0;
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: #f0f2f5;
-            color: #333;
+            background: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
         }
+
+        /* Light and Dark Mode Variables */
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --container-bg: #fff;
+            --container-shadow: rgba(0, 0, 0, 0.1);
+            --input-border: #ccc;
+            --button-bg: #4a90e2;
+            --button-hover: #357ab8;
+            --dashed-border: #bbb;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --container-bg: #2a2a2a;
+            --container-shadow: rgba(0, 0, 0, 0.3);
+            --input-border: #555;
+            --button-bg: #579aff;
+            --button-hover: #4078c0;
+            --dashed-border: #777;
+        }
+
+
+        /* @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1e1e1e;
+                --text-color: #e0e0e0;
+                --container-bg: #2a2a2a;
+                --container-shadow: rgba(0, 0, 0, 0.3);
+                --input-border: #555;
+                --button-bg: #579aff;
+                --button-hover: #4078c0;
+                --dashed-border: #777;
+            }
+        } */
 
         .container {
             width: 100%;
@@ -39,12 +77,13 @@
 
         /* Configuration Panel */
         #config {
-            background: #fff;
+            background: var(--container-bg);
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px var(--container-shadow);
             padding: 20px;
             max-width: 500px;
             margin: 0 auto 20px auto;
+            transition: background 0.3s ease-in-out;
         }
 
         .config-row {
@@ -57,13 +96,22 @@
         .config-row label {
             width: 190px;
             font-weight: bold;
+            color: var(--text-color);
         }
 
         .config-row input[type="number"] {
             padding: 6px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 4px;
             flex: 1;
+            background: var(--container-bg);
+            color: var(--text-color);
+            transition: background 0.3s ease-in-out, color 0.3s ease-in-out, border 0.3s ease-in-out;
+        }
+
+        .config-row input[type="number"]:focus {
+            outline: none;
+            border-color: var(--button-bg);
         }
 
         /* Exercise Type row uses its own inner container to avoid overflow */
@@ -82,6 +130,7 @@
         .radio-group label {
             font-weight: normal;
             margin-left: 4px;
+            color: var(--text-color);
         }
 
         /* Exercise Panel */
@@ -94,9 +143,11 @@
             padding: 20px;
         }
 
+        /* Visual Container */
         #visualContainer {
             position: relative;
-            width: 400px;
+            width: 100%;
+            max-width: 400px;
             height: 400px;
             margin-bottom: 20px;
         }
@@ -106,7 +157,7 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            border: 2px dashed #bbb;
+            border: 2px dashed var(--dashed-border);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
@@ -127,10 +178,11 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            background: #4a90e2;
+            background: var(--button-bg);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s ease-in-out;
         }
 
         /* Text display */
@@ -138,6 +190,7 @@
         #cycleCounter {
             font-size: 1.5em;
             margin: 10px;
+            color: var(--text-color);
         }
 
         /* Buttons */
@@ -148,13 +201,53 @@
             cursor: pointer;
             border: none;
             border-radius: 8px;
-            background: #4a90e2;
+            background: var(--button-bg);
             color: #fff;
-            transition: background 0.3s;
+            transition: background 0.3s ease-in-out, transform 0.1s ease-in-out;
         }
 
         button:hover {
-            background: #357ab8;
+            background: var(--button-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .config-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .config-row label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+
+            #visualContainer {
+                height: 300px;
+            }
+        }
+
+        /* Dark Mode Toggle Button */
+        #toggle-theme {
+            display: block;
+            margin-left: auto;
+            right: 0;
+
+            padding: 8px 12px;
+            font-size: 14px;
+            border: none;
+            background: #444;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #toggle-theme:hover {
+            background: #222;
         }
     </style>
 </head>
@@ -163,6 +256,7 @@
     <div class="container">
         <!-- Configuration Panel -->
         <div id="config">
+            <button id="toggle-theme">Dark Mode</button>
             <h1>Configure Your Breathing Exercise</h1>
             <div class="config-row">
                 <label for="inhale">Inhale Duration (sec):</label>
@@ -170,15 +264,15 @@
             </div>
             <div class="config-row">
                 <label for="holdInhale">Hold after Inhale (sec):</label>
-                <input type="number" id="holdInhale" value="3" min="0" step="0.5" />
+                <input type="number" id="holdInhale" value="4" min="0" step="0.5" />
             </div>
             <div class="config-row">
                 <label for="exhale">Exhale Duration (sec):</label>
-                <input type="number" id="exhale" value="8" min="1" step="0.5" />
+                <input type="number" id="exhale" value="4" min="1" step="0.5" />
             </div>
             <div class="config-row">
                 <label for="holdExhale">Hold after Exhale (sec):</label>
-                <input type="number" id="holdExhale" value="0" min="0" step="0.5" />
+                <input type="number" id="holdExhale" value="4" min="0" step="0.5" />
             </div>
             <div class="config-row radio-row">
                 <label>Exercise Type:</label>
@@ -458,6 +552,27 @@
                     console.log('ServiceWorker registration failed: ', err);
                 });
             });
+        }
+
+        const toggleBtn = document.getElementById('toggle-theme');
+        toggleBtn.addEventListener('click', () => {
+            let currentTheme = document.documentElement.getAttribute('data-theme');
+            let newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+            if (newTheme === 'dark') {
+                toggleBtn.innerHTML = "Light Mode"
+            }else{
+                toggleBtn.innerHTML = "Dark Mode"
+            }
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme); // Store preference
+        });
+
+        // Load user preference on page load
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-theme', storedTheme);
+        } else {
+            applyThemeBasedOnOS();
         }
     </script>
 </body>
