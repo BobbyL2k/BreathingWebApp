@@ -119,6 +119,29 @@
             color: var(--text-color);
         }
 
+        /* Profile Buttons */
+        #profileButtons {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+
+        #profileButtons button {
+            flex: 1;
+            margin: 0 5px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out;
+        }
+
+        #profileButtons button:hover {
+            background: var(--button-hover);
+        }
+
         /* Exercise Panel */
         #exercise {
             display: none;
@@ -260,6 +283,13 @@
                 <label for="holdExhale">Hold after Exhale (sec):</label>
                 <input type="number" id="holdExhale" value="4" min="0" step="0.5" />
             </div>
+
+            <!-- Profile Buttons -->
+            <div id="profileButtons">
+                <button id="workProfile">Work (4-4-4-4)</button>
+                <button id="restProfile">Rest (4-7-8-0)</button>
+            </div>
+
             <div class="config-row radio-row">
                 <label>Exercise Type:</label>
                 <div class="radio-group">
@@ -324,6 +354,10 @@
         const summaryText = document.getElementById("summaryText");
         const startButton = document.getElementById("startButton");
 
+        // Profile Buttons
+        const workProfileBtn = document.getElementById("workProfile");
+        const restProfileBtn = document.getElementById("restProfile");
+
         // Update the summary display using floored (rounded down) values.
         function updateSummary() {
             const inhale = parseFloat(inhaleInput.value) || 0;
@@ -335,29 +369,27 @@
             if (cyclesModeRadio.checked) {
                 const numCycles = parseInt(cyclesInput.value, 10) || 0;
                 const totalDurationSec = Math.floor(cycleDuration * numCycles);
-                if (numCycles > 1) {
-                    summaryText.textContent = `You will perform ${numCycles} cycles (${totalDurationSec} sec total).`;
-                } else {
-                    summaryText.textContent = `You will perform ${numCycles} cycle (${totalDurationSec} sec total).`;
-                }
+                summaryText.textContent = numCycles > 1 ?
+                    `You will perform ${numCycles} cycles (${totalDurationSec} sec total).` :
+                    `You will perform ${numCycles} cycle (${totalDurationSec} sec total).`;
                 durationInput.value = totalDurationSec;
             } else {
                 const totalDurationInput = parseFloat(durationInput.value) || 0;
                 const numCyclesCalc = cycleDuration > 0 ? Math.floor(totalDurationInput / cycleDuration) : 0;
                 const totalDurationSec = numCyclesCalc * cycleDuration;
-                if (numCyclesCalc > 1) {
-                    summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycles).`;
-                } else {
-                    summaryText.textContent = `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycle).`;
-                }
+                summaryText.textContent = numCyclesCalc > 1 ?
+                    `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycles).` :
+                    `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycle).`;
                 cyclesInput.value = numCyclesCalc;
             }
         }
 
+        // Add event listeners for inputs
         [inhaleInput, holdInhaleInput, exhaleInput, holdExhaleInput, cyclesInput, durationInput].forEach(
             (el) => el.addEventListener("input", updateSummary)
         );
 
+        // Event listeners for mode radio buttons
         [cyclesModeRadio, durationModeRadio].forEach((radio) => {
             radio.addEventListener("change", () => {
                 if (cyclesModeRadio.checked) {
@@ -372,6 +404,23 @@
         });
 
         updateSummary();
+
+        // Profile button event handlers
+        workProfileBtn.addEventListener("click", () => {
+            inhaleInput.value = 4;
+            holdInhaleInput.value = 4;
+            exhaleInput.value = 4;
+            holdExhaleInput.value = 4;
+            updateSummary();
+        });
+
+        restProfileBtn.addEventListener("click", () => {
+            inhaleInput.value = 4;
+            holdInhaleInput.value = 7;
+            exhaleInput.value = 8;
+            holdExhaleInput.value = 0;
+            updateSummary();
+        });
 
         /*********************
          * EXERCISE LOGIC    *
