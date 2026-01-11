@@ -1,584 +1,567 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Link to the manifest file -->
-    <link rel="manifest" href="manifest.json" />
-    <!-- Set a theme color for the browser UI -->
-    <meta name="theme-color" content="#4a90e2" />
-    <title>Guided Breathing Exercise</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guided Breathing</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Tailwind CSS -->
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (for JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
-        /* Global resets and container */
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
-        }
-
-        /* Light and Dark Mode Variables */
-        :root {
-            --bg-color: #f0f2f5;
-            --text-color: #333;
-            --container-bg: #fff;
-            --container-shadow: rgba(0, 0, 0, 0.1);
-            --input-border: #ccc;
-            --button-bg: #4a90e2;
-            --button-hover: #357ab8;
-            --dashed-border: #bbb;
-        }
-
-        :root[data-theme="dark"] {
-            --bg-color: #1e1e1e;
-            --text-color: #e0e0e0;
-            --container-bg: #2a2a2a;
-            --container-shadow: rgba(0, 0, 0, 0.3);
-            --input-border: #555;
-            --button-bg: #579aff;
-            --button-hover: #4078c0;
-            --dashed-border: #777;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        /* Configuration Panel */
-        #config {
-            background: var(--container-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px var(--container-shadow);
-            padding: 20px;
-            max-width: 500px;
-            margin: 0 auto 20px auto;
-            transition: background 0.3s ease-in-out;
-        }
-
-        .config-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .config-row label {
-            width: 190px;
-            font-weight: bold;
-            color: var(--text-color);
-        }
-
-        .config-row input[type="number"] {
-            padding: 6px;
-            border: 1px solid var(--input-border);
-            border-radius: 4px;
-            flex: 1;
-            background: var(--container-bg);
-            color: var(--text-color);
-            transition: background 0.3s ease-in-out, color 0.3s ease-in-out, border 0.3s ease-in-out;
-        }
-
-        .config-row input[type="number"]:focus {
-            outline: none;
-            border-color: var(--button-bg);
-        }
-
-        /* Exercise Type row uses its own inner container to avoid overflow */
-        .radio-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .radio-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .radio-group label {
-            font-weight: normal;
-            margin-left: 4px;
-            color: var(--text-color);
-        }
-
-        /* Profile Buttons */
-        #profileButtons {
-            display: flex;
-            justify-content: space-around;
-            margin: 15px 0;
-        }
-
-        #profileButtons button {
-            flex: 1;
-            margin: 0 5px;
-            background: var(--button-bg);
-            color: #fff;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s ease-in-out;
-        }
-
-        #profileButtons button:hover {
-            background: var(--button-hover);
-        }
-
-        /* Exercise Panel */
-        #exercise {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Visual Container */
-        #visualContainer {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            height: 400px;
-            margin-bottom: 20px;
-        }
-
-        /* Guidance outlines for min and max sizes */
-        .boundary {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            border: 2px dashed var(--dashed-border);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        #minBoundary {
-            width: 50px;
-            height: 50px;
-        }
-
-        #maxBoundary {
-            width: 250px;
-            height: 250px;
-        }
-
-        /* Animated Circle (Modern flat design) */
-        #circle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            background: var(--button-bg);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: background 0.3s ease-in-out;
-        }
-
-        /* Text display */
-        #phaseText,
-        #cycleCounter {
-            font-size: 1.5em;
-            margin: 10px;
-            color: var(--text-color);
-        }
-
-        /* Buttons */
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            margin: 5px;
-            cursor: pointer;
-            border: none;
-            border-radius: 8px;
-            background: var(--button-bg);
-            color: #fff;
-            transition: background 0.3s ease-in-out, transform 0.1s ease-in-out;
-        }
-
-        button:hover {
-            background: var(--button-hover);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 600px) {
-            .config-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .config-row label {
-                width: 100%;
-                margin-bottom: 5px;
-            }
-
-            #visualContainer {
-                height: 300px;
-            }
-        }
-
-        /* Dark Mode Toggle Button */
-        #toggle-theme {
-            display: block;
-            margin-left: auto;
-            right: 0;
-
-            padding: 8px 12px;
-            font-size: 14px;
-            border: none;
-            background: #444;
-            color: white;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        #toggle-theme:hover {
-            background: #222;
-        }
+        /* Custom scrollbar for settings */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+        
+        /* Prevent elastic scrolling on iOS */
+        body { overscroll-behavior-y: none; }
+        
+        /* Smooth fade ins */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
     </style>
 </head>
+<body class="bg-slate-900 text-slate-100 h-[100dvh] overflow-hidden selection:bg-indigo-500/30">
+    <div id="root" class="h-full w-full"></div>
 
-<body>
-    <div class="container">
-        <!-- Configuration Panel -->
-        <div id="config">
-            <button id="toggle-theme">Dark Mode</button>
-            <h1>Configure Your Breathing Exercise</h1>
-            <div class="config-row">
-                <label for="inhale">Inhale Duration (sec):</label>
-                <input type="number" id="inhale" value="4" min="1" step="0.5" />
-            </div>
-            <div class="config-row">
-                <label for="holdInhale">Hold after Inhale (sec):</label>
-                <input type="number" id="holdInhale" value="4" min="0" step="0.5" />
-            </div>
-            <div class="config-row">
-                <label for="exhale">Exhale Duration (sec):</label>
-                <input type="number" id="exhale" value="4" min="1" step="0.5" />
-            </div>
-            <div class="config-row">
-                <label for="holdExhale">Hold after Exhale (sec):</label>
-                <input type="number" id="holdExhale" value="4" min="0" step="0.5" />
-            </div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-            <!-- Profile Buttons -->
-            <div id="profileButtons">
-                <button id="workProfile">Work (4-4-4-4)</button>
-                <button id="restProfile">Rest (4-7-8-0)</button>
-            </div>
-
-            <div class="config-row radio-row">
-                <label>Exercise Type:</label>
-                <div class="radio-group">
-                    <input type="radio" id="cyclesMode" name="mode" value="cycles" checked />
-                    <label for="cyclesMode"># of Cycles</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="durationMode" name="mode" value="duration" />
-                    <label for="durationMode">Total Duration</label>
-                </div>
-            </div>
-            <div class="config-row" id="cyclesInput">
-                <label for="cycles">Number of cycles:</label>
-                <input type="number" id="cycles" value="4" min="1" />
-            </div>
-            <div class="config-row" id="durationInput" style="display: none;">
-                <label for="duration">Total Duration (sec):</label>
-                <input type="number" id="duration" value="60" min="1" />
-            </div>
-            <div class="config-row" id="summary">
-                <p id="summaryText"></p>
-            </div>
-            <div class="config-row">
-                <button id="startButton">Start Exercise</button>
-            </div>
-        </div>
-
-        <!-- Exercise Panel -->
-        <div id="exercise">
-            <div id="visualContainer">
-                <!-- Animated Circle -->
-                <div id="circle"></div>
-                <!-- Guidance boundaries -->
-                <div id="minBoundary" class="boundary"></div>
-                <div id="maxBoundary" class="boundary"></div>
-            </div>
-            <div id="phaseText"></div>
-            <div id="cycleCounter"></div>
-            <div>
-                <button id="pauseButton">Pause</button>
-                <button id="cancelButton">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        /*****************
-         * CONFIGURATION *
-         *****************/
-        const configDiv = document.getElementById("config");
-        const exerciseDiv = document.getElementById("exercise");
-        const inhaleInput = document.getElementById("inhale");
-        const holdInhaleInput = document.getElementById("holdInhale");
-        const exhaleInput = document.getElementById("exhale");
-        const holdExhaleInput = document.getElementById("holdExhale");
-        const cyclesModeRadio = document.getElementById("cyclesMode");
-        const durationModeRadio = document.getElementById("durationMode");
-        const cyclesInput = document.getElementById("cycles");
-        const durationInput = document.getElementById("duration");
-        const cyclesInputDiv = document.getElementById("cyclesInput");
-        const durationInputDiv = document.getElementById("durationInput");
-        const summaryText = document.getElementById("summaryText");
-        const startButton = document.getElementById("startButton");
-
-        // Profile Buttons
-        const workProfileBtn = document.getElementById("workProfile");
-        const restProfileBtn = document.getElementById("restProfile");
-
-        // Update the summary display using floored (rounded down) values.
-        function updateSummary() {
-            const inhale = parseFloat(inhaleInput.value) || 0;
-            const holdInhale = parseFloat(holdInhaleInput.value) || 0;
-            const exhale = parseFloat(exhaleInput.value) || 0;
-            const holdExhale = parseFloat(holdExhaleInput.value) || 0;
-            const cycleDuration = inhale + holdInhale + exhale + holdExhale;
-
-            if (cyclesModeRadio.checked) {
-                const numCycles = parseInt(cyclesInput.value, 10) || 0;
-                const totalDurationSec = Math.floor(cycleDuration * numCycles);
-                summaryText.textContent = numCycles > 1 ?
-                    `You will perform ${numCycles} cycles (${totalDurationSec} sec total).` :
-                    `You will perform ${numCycles} cycle (${totalDurationSec} sec total).`;
-                durationInput.value = totalDurationSec;
-            } else {
-                const totalDurationInput = parseFloat(durationInput.value) || 0;
-                const numCyclesCalc = cycleDuration > 0 ? Math.floor(totalDurationInput / cycleDuration) : 0;
-                const totalDurationSec = numCyclesCalc * cycleDuration;
-                summaryText.textContent = numCyclesCalc > 1 ?
-                    `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycles).` :
-                    `You will exercise for ${totalDurationSec} sec (${numCyclesCalc} cycle).`;
-                cyclesInput.value = numCyclesCalc;
-            }
-        }
-
-        // Add event listeners for inputs
-        [inhaleInput, holdInhaleInput, exhaleInput, holdExhaleInput, cyclesInput, durationInput].forEach(
-            (el) => el.addEventListener("input", updateSummary)
+        // --- Icons (SVG replacements for Lucide) ---
+        const IconBase = ({ d, className, children, ...props }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className} 
+                {...props}
+            >
+                {d}
+                {children}
+            </svg>
         );
 
-        // Event listeners for mode radio buttons
-        [cyclesModeRadio, durationModeRadio].forEach((radio) => {
-            radio.addEventListener("change", () => {
-                if (cyclesModeRadio.checked) {
-                    cyclesInputDiv.style.display = "flex";
-                    durationInputDiv.style.display = "none";
-                } else {
-                    cyclesInputDiv.style.display = "none";
-                    durationInputDiv.style.display = "flex";
-                }
-                updateSummary();
+        const Icons = {
+            Play: (p) => <IconBase d={<polygon points="5 3 19 12 5 21 5 3" />} {...p} />,
+            Pause: (p) => <IconBase d={<><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></>} {...p} />,
+            RotateCcw: (p) => <IconBase d={<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />} {...p}><path d="M3 3v5h5" /></IconBase>,
+            Wind: (p) => <IconBase d={<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" />} {...p}><path d="M9.6 4.6A2 2 0 1 1 11 8H2" /><path d="M12.6 19.4A2 2 0 1 0 14 16H2" /></IconBase>,
+            Settings: (p) => <IconBase d={<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />} {...p}><circle cx="12" cy="12" r="3" /></IconBase>,
+            X: (p) => <IconBase d={<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>} {...p} />,
+            Heart: (p) => <IconBase d={<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />} {...p} />,
+            Monitor: (p) => <IconBase d={<><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></>} {...p} />,
+            Coffee: (p) => <IconBase d={<path d="M18 8h1a4 4 0 0 1 0 8h-1" />} {...p}><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" /></IconBase>,
+            Plus: (p) => <IconBase d={<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>} {...p} />,
+            Trash2: (p) => <IconBase d={<><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></>} {...p} />,
+            Check: (p) => <IconBase d={<polyline points="20 6 9 17 4 12" />} {...p} />,
+            Clock: (p) => <IconBase d={<circle cx="12" cy="12" r="10" />} {...p}><polyline points="12 6 12 12 16 14" /></IconBase>,
+        };
+
+        const defaultExercises = [
+            {
+                id: '4-7-8',
+                name: 'Deep Relax',
+                description: '4-7-8 Technique for sleep.',
+                icon: <Icons.Wind className="w-5 h-5" />,
+                color: 'from-slate-800 to-indigo-950', 
+                ringColor: 'border-indigo-800',
+                phases: [
+                    { label: 'Inhale', duration: 4, scale: 1.5 },
+                    { label: 'Hold', duration: 7, scale: 1.5 },
+                    { label: 'Exhale', duration: 8, scale: 1.0 },
+                ],
+            },
+            {
+                id: 'box',
+                name: 'Box Breathing',
+                description: 'Equal duration for focus.',
+                icon: <Icons.Monitor className="w-5 h-5" />,
+                color: 'from-slate-800 to-emerald-950',
+                ringColor: 'border-emerald-800',
+                phases: [
+                    { label: 'Inhale', duration: 4, scale: 1.5 },
+                    { label: 'Hold', duration: 4, scale: 1.5 },
+                    { label: 'Exhale', duration: 4, scale: 1.0 },
+                    { label: 'Hold', duration: 4, scale: 1.0 },
+                ],
+            },
+            {
+                id: 'coherent',
+                name: 'Coherent',
+                description: 'Resonant breathing.',
+                icon: <Icons.Heart className="w-5 h-5" />,
+                color: 'from-slate-800 to-rose-950',
+                ringColor: 'border-rose-900',
+                phases: [
+                    { label: 'Inhale', duration: 6, scale: 1.5 },
+                    { label: 'Exhale', duration: 6, scale: 1.0 },
+                ],
+            },
+        ];
+
+        // --- Main App Component ---
+        function App() {
+            // Load state from local storage if available
+            const [customExercises, setCustomExercises] = useState(() => {
+                const saved = localStorage.getItem('breathing_custom_exercises');
+                return saved ? JSON.parse(saved) : [];
             });
-        });
 
-        updateSummary();
+            const [activeExerciseId, setActiveExerciseId] = useState('4-7-8');
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [isFinished, setIsFinished] = useState(false);
+            
+            // Timer State
+            const [phaseIndex, setPhaseIndex] = useState(0);
+            const [timeLeftInPhase, setTimeLeftInPhase] = useState(4);
+            const [sessionDuration, setSessionDuration] = useState(0);
+            const [completedCycles, setCompletedCycles] = useState(0);
+            
+            // Settings State
+            const [showSettings, setShowSettings] = useState(false);
+            const [settingsTab, setSettingsTab] = useState('exercises'); // 'exercises', 'goal', 'create'
+            
+            // Goal State
+            const [goalMode, setGoalMode] = useState('none'); // 'none', 'time', 'cycles'
+            const [goalValue, setGoalValue] = useState(5); // Minutes or Count
 
-        // Profile button event handlers
-        workProfileBtn.addEventListener("click", () => {
-            inhaleInput.value = 4;
-            holdInhaleInput.value = 4;
-            exhaleInput.value = 4;
-            holdExhaleInput.value = 4;
-            updateSummary();
-        });
+            // Custom Creation State
+            const [newExercise, setNewExercise] = useState({
+                name: '',
+                inhale: 4,
+                holdTop: 0,
+                exhale: 4,
+                holdBottom: 0
+            });
 
-        restProfileBtn.addEventListener("click", () => {
-            inhaleInput.value = 4;
-            holdInhaleInput.value = 7;
-            exhaleInput.value = 8;
-            holdExhaleInput.value = 0;
-            updateSummary();
-        });
+            const timerRef = useRef(null);
+            const lastTickRef = useRef(Date.now());
 
-        /*********************
-         * EXERCISE LOGIC    *
-         *********************/
-        const circle = document.getElementById("circle");
-        const phaseText = document.getElementById("phaseText");
-        const cycleCounter = document.getElementById("cycleCounter");
-        const pauseButton = document.getElementById("pauseButton");
-        const cancelButton = document.getElementById("cancelButton");
+            const allExercises = [...defaultExercises, ...customExercises];
+            const activeExercise = allExercises.find((e) => e.id === activeExerciseId) || defaultExercises[0];
+            const currentPhase = activeExercise.phases[phaseIndex];
 
-        // Define min and max sizes (must match the guidance boundaries)
-        const minSize = 50;   // in pixels
-        const maxSize = 250;  // in pixels
+            // Save custom exercises
+            useEffect(() => {
+                localStorage.setItem('breathing_custom_exercises', JSON.stringify(customExercises));
+            }, [customExercises]);
 
-        let phases = [];           // Array of phases for one cycle.
-        let totalCycles = 0;       // Total cycles to perform.
-        let currentCycle = 1;
-        let currentPhaseIndex = 0;
-        let currentPhaseRemaining = 0; // seconds remaining in current phase.
-        let currentPhaseDuration = 0;  // full duration of current phase.
-        let lastTimestamp = null;
-        let isPaused = false;
-        let animationFrameId = null;
+            // Initialize timer when exercise changes
+            useEffect(() => {
+                resetSession();
+            }, [activeExerciseId, goalMode, goalValue]);
 
-        startButton.addEventListener("click", startExercise);
-        pauseButton.addEventListener("click", togglePause);
-        cancelButton.addEventListener("click", cancelExercise);
+            const resetSession = () => {
+                setIsPlaying(false);
+                setIsFinished(false);
+                setPhaseIndex(0);
+                setTimeLeftInPhase(activeExercise.phases[0].duration);
+                setSessionDuration(0);
+                setCompletedCycles(0);
+                if (timerRef.current) clearInterval(timerRef.current);
+            };
 
-        function startExercise() {
-            const inhale = parseFloat(inhaleInput.value) || 0;
-            const holdInhale = parseFloat(holdInhaleInput.value) || 0;
-            const exhale = parseFloat(exhaleInput.value) || 0;
-            const holdExhale = parseFloat(holdExhaleInput.value) || 0;
-
-            // Build the phases for one cycle.
-            phases = [
-                { name: "Inhale", duration: inhale, type: "inhale" },
-                { name: "Hold (after inhale)", duration: holdInhale, type: "holdFull" },
-                { name: "Exhale", duration: exhale, type: "exhale" },
-                { name: "Hold (after exhale)", duration: holdExhale, type: "holdEmpty" }
-            ];
-
-            const cycleTime = phases.reduce((sum, phase) => sum + phase.duration, 0);
-            if (cyclesModeRadio.checked) {
-                totalCycles = parseInt(cyclesInput.value, 10) || 0;
-            } else {
-                const totalDurationInput = parseFloat(durationInput.value) || 0;
-                totalCycles = Math.max(1, Math.floor(totalDurationInput / cycleTime));
-            }
-
-            currentCycle = 1;
-            currentPhaseIndex = 0;
-            currentPhaseDuration = phases[0].duration;
-            currentPhaseRemaining = currentPhaseDuration;
-            isPaused = false;
-            pauseButton.textContent = "Pause";
-
-            configDiv.style.display = "none";
-            exerciseDiv.style.display = "flex";
-
-            // Reset circle to min size.
-            updateCircle("reset", 0);
-
-            phaseText.textContent = phases[0].name;
-            cycleCounter.textContent = `Cycle ${currentCycle} of ${totalCycles}`;
-
-            lastTimestamp = null;
-            animationFrameId = requestAnimationFrame(step);
-        }
-
-        function step(timestamp) {
-            if (!lastTimestamp) lastTimestamp = timestamp;
-            const deltaTime = (timestamp - lastTimestamp) / 1000;
-            lastTimestamp = timestamp;
-
-            if (!isPaused) {
-                currentPhaseRemaining -= deltaTime;
-                let progress = 1 - (currentPhaseRemaining / currentPhaseDuration);
-                progress = Math.min(Math.max(progress, 0), 1);
-                const phaseType = phases[currentPhaseIndex].type;
-                updateCircle(phaseType, progress);
-
-                phaseText.textContent =
-                    phases[currentPhaseIndex].name +
-                    (currentPhaseRemaining > 0
-                        ? ` (${currentPhaseRemaining.toFixed(1)} sec)`
-                        : "");
-
-                if (currentPhaseRemaining <= 0) {
-                    const extra = -currentPhaseRemaining;
-                    currentPhaseIndex++;
-                    if (currentPhaseIndex >= phases.length) {
-                        if (currentCycle >= totalCycles) {
-                            finishExercise();
-                            return;
-                        } else {
-                            currentCycle++;
-                            currentPhaseIndex = 0;
-                            cycleCounter.textContent = `Cycle ${currentCycle} of ${totalCycles}`;
-                        }
-                    }
-                    currentPhaseDuration = phases[currentPhaseIndex].duration;
-                    currentPhaseRemaining = currentPhaseDuration - extra;
-                    phaseText.textContent = phases[currentPhaseIndex].name;
+            const togglePlay = () => {
+                if (isFinished) {
+                    resetSession();
+                    setTimeout(() => {
+                        setIsPlaying(true);
+                        lastTickRef.current = Date.now();
+                    }, 10);
+                    return;
                 }
-            }
-            animationFrameId = requestAnimationFrame(step);
+
+                if (isPlaying) {
+                    setIsPlaying(false);
+                    if (timerRef.current) clearInterval(timerRef.current);
+                } else {
+                    setIsPlaying(true);
+                    lastTickRef.current = Date.now();
+                }
+            };
+
+            useEffect(() => {
+                if (isPlaying) {
+                    timerRef.current = setInterval(() => {
+                        const now = Date.now();
+                        const delta = (now - lastTickRef.current) / 1000;
+                        lastTickRef.current = now;
+
+                        setSessionDuration(prev => {
+                            const newDuration = prev + delta;
+                            // Check Time Goal
+                            if (goalMode === 'time' && newDuration >= goalValue * 60) {
+                                finishSession();
+                            }
+                            return newDuration;
+                        });
+
+                        setTimeLeftInPhase((prev) => {
+                            const newTime = prev - delta;
+                            if (newTime <= 0) {
+                                // Move to next phase
+                                setPhaseIndex((curr) => {
+                                    const nextIndex = (curr + 1) % activeExercise.phases.length;
+                                    
+                                    // Check Cycle Goal
+                                    if (nextIndex === 0) {
+                                        const newCompletedCycles = completedCycles + 1;
+                                        setCompletedCycles(newCompletedCycles);
+                                        if (goalMode === 'cycles' && newCompletedCycles >= goalValue) {
+                                            finishSession();
+                                            return curr; 
+                                        }
+                                    }
+                                    return nextIndex;
+                                });
+                                return 0; // Will be reset by useEffect
+                            }
+                            return newTime;
+                        });
+                    }, 50);
+                }
+                return () => {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                };
+            }, [isPlaying, activeExercise, goalMode, goalValue, completedCycles]);
+
+            const finishSession = () => {
+                setIsPlaying(false);
+                setIsFinished(true);
+                if (timerRef.current) clearInterval(timerRef.current);
+            };
+
+            // Phase time reset logic
+            useEffect(() => {
+                if (timeLeftInPhase <= 0 && !isFinished) {
+                    setTimeLeftInPhase(activeExercise.phases[phaseIndex].duration);
+                }
+            }, [phaseIndex, activeExercise, isFinished]);
+
+            const handleCreateExercise = () => {
+                if (!newExercise.name) return;
+
+                const phases = [
+                    { label: 'Inhale', duration: Number(newExercise.inhale), scale: 1.5 },
+                ];
+                if (Number(newExercise.holdTop) > 0) {
+                    phases.push({ label: 'Hold', duration: Number(newExercise.holdTop), scale: 1.5 });
+                }
+                phases.push({ label: 'Exhale', duration: Number(newExercise.exhale), scale: 1.0 });
+                if (Number(newExercise.holdBottom) > 0) {
+                    phases.push({ label: 'Hold', duration: Number(newExercise.holdBottom), scale: 1.0 });
+                }
+
+                const created = {
+                    id: `custom-${Date.now()}`,
+                    name: newExercise.name,
+                    description: 'Custom Sequence',
+                    icon: <Icons.Coffee className="w-5 h-5" />,
+                    color: 'from-slate-800 to-slate-900',
+                    ringColor: 'border-slate-700',
+                    phases,
+                };
+
+                setCustomExercises([...customExercises, created]);
+                setActiveExerciseId(created.id);
+                setSettingsTab('exercises');
+                setNewExercise({ name: '', inhale: 4, holdTop: 0, exhale: 4, holdBottom: 0 });
+            };
+
+            const deleteCustomExercise = (id, e) => {
+                e.stopPropagation();
+                setCustomExercises(customExercises.filter(ex => ex.id !== id));
+                if (activeExerciseId === id) setActiveExerciseId(defaultExercises[0].id);
+            };
+
+            const formatTime = (totalSeconds) => {
+                const m = Math.floor(totalSeconds / 60);
+                const s = Math.floor(totalSeconds % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+            };
+
+            const TabButton = ({ id, label, icon: Icon }) => (
+                <button
+                    onClick={() => setSettingsTab(id)}
+                    className={`flex-1 pb-3 text-sm font-medium border-b-2 flex items-center justify-center gap-2 transition-colors ${
+                        settingsTab === id 
+                        ? 'border-indigo-500 text-indigo-400' 
+                        : 'border-transparent text-slate-500 hover:text-slate-300'
+                    }`}
+                >
+                    <Icon className="w-4 h-4" /> {label}
+                </button>
+            );
+
+            return (
+                <div className={`min-h-screen w-full bg-gradient-to-b ${activeExercise.color} transition-colors duration-1000 flex flex-col items-center justify-between text-slate-100 overflow-hidden relative font-sans`}>
+                    
+                    {/* Background Texture */}
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")' }}></div>
+
+                    {/* Header */}
+                    <header className="w-full p-6 flex justify-between items-center z-10">
+                        <div className="flex items-center gap-2 opacity-80">
+                            <Icons.Wind className="w-5 h-5" />
+                            <h1 className="text-lg font-medium tracking-wide">Breathe</h1>
+                        </div>
+                        <button 
+                            onClick={() => setShowSettings(true)}
+                            className="p-2 rounded-full hover:bg-white/5 transition-colors text-slate-300"
+                        >
+                            <Icons.Settings className="w-6 h-6" />
+                        </button>
+                    </header>
+
+                    {/* Main Visuals */}
+                    <main className="flex-1 flex flex-col items-center justify-center w-full max-w-md px-6 relative z-10">
+                        <div className="relative w-80 h-80 flex items-center justify-center mb-8">
+                            
+                            {/* Guide Rings */}
+                            <div className="absolute w-48 h-48 rounded-full border border-white/10 z-0"></div>
+                            <div className="absolute w-48 h-48 rounded-full border border-dashed border-white/20 scale-150 z-0"></div>
+                            
+                            {/* Animated Circle */}
+                            <div 
+                                className="w-48 h-48 bg-white/5 backdrop-blur-sm rounded-full shadow-2xl border border-white/10 flex items-center justify-center transition-all ease-linear relative z-20"
+                                style={{
+                                    transform: `scale(${isPlaying ? currentPhase.scale : 1})`,
+                                    transitionDuration: `${isPlaying ? currentPhase.duration : 1.5}s`
+                                }}
+                            >
+                                <div className="text-center transform transition-transform ease-linear" style={{ 
+                                    transform: `scale(${isPlaying ? 1/currentPhase.scale : 1})`,
+                                    transitionDuration: `${isPlaying ? currentPhase.duration : 1.5}s`
+                                }}>
+                                    {isFinished ? (
+                                        <div className="flex flex-col items-center animate-in">
+                                            <Icons.Check className="w-8 h-8 text-emerald-400 mb-2" />
+                                            <span className="text-lg font-medium text-emerald-200">Done</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400 mb-2">
+                                                {isPlaying ? currentPhase.label : 'Ready'}
+                                            </p>
+                                            <span className="text-5xl font-extralight text-slate-100 tabular-nums">
+                                                {isPlaying ? Math.ceil(timeLeftInPhase) : formatTime(sessionDuration)}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Text Instructions */}
+                        <div className="text-center mb-12 h-16">
+                            <h2 className="text-xl font-medium text-slate-200">{activeExercise.name}</h2>
+                            <p className="text-slate-500 text-sm mt-1">
+                                {isFinished 
+                                    ? "Great job. Take a moment." 
+                                    : isPlaying 
+                                        ? (goalMode !== 'none' && `Goal: ${goalMode === 'time' ? `${formatTime(goalValue * 60 - sessionDuration)} left` : `${completedCycles}/${goalValue} cycles`}`)
+                                        : activeExercise.description}
+                            </p>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center gap-10">
+                            <button 
+                                onClick={resetSession}
+                                className="p-4 rounded-full text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all"
+                            >
+                                <Icons.RotateCcw className="w-5 h-5" />
+                            </button>
+
+                            <button 
+                                onClick={togglePlay}
+                                className="group relative p-8 rounded-full bg-slate-100 text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center"
+                            >
+                                {isFinished ? (
+                                    <Icons.RotateCcw className="w-8 h-8 stroke-1" />
+                                ) : isPlaying ? (
+                                    <Icons.Pause className="w-8 h-8 fill-current" />
+                                ) : (
+                                    <Icons.Play className="w-8 h-8 fill-current ml-1" />
+                                )}
+                            </button>
+                            
+                            <div className="w-14 h-14" />
+                        </div>
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="w-full mb-6 p-6 flex justify-center text-xs text-slate-600 z-10">
+                        <div className="flex gap-6">
+                            <span>Total: {formatTime(sessionDuration)}</span>
+                            <span>Cycles: {completedCycles}</span>
+                        </div>
+                    </footer>
+
+                    {/* Settings Modal */}
+                    {showSettings && (
+                        <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in">
+                            <div className="bg-slate-900 border border-slate-800 w-full max-w-sm h-[85vh] sm:h-auto sm:rounded-2xl shadow-2xl flex flex-col">
+                                <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                                    <h3 className="font-semibold text-slate-200">Settings</h3>
+                                    <button onClick={() => setShowSettings(false)} className="p-1 rounded-full hover:bg-slate-800 text-slate-400">
+                                        <Icons.X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="flex px-4 pt-4 gap-4 bg-slate-900/50">
+                                    <TabButton id="exercises" label="Exercises" icon={Icons.Wind} />
+                                    <TabButton id="goal" label="Goal" icon={Icons.Clock} />
+                                    <TabButton id="create" label="Custom" icon={Icons.Plus} />
+                                </div>
+                                
+                                <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
+                                    {settingsTab === 'exercises' && (
+                                        <div className="space-y-2">
+                                            {allExercises.map((ex) => (
+                                                <button
+                                                    key={ex.id}
+                                                    onClick={() => { setActiveExerciseId(ex.id); }}
+                                                    className={`w-full p-4 flex items-center gap-4 rounded-xl transition-all border ${
+                                                        activeExerciseId === ex.id ? 'bg-slate-800 border-indigo-500/50' : 'bg-transparent hover:bg-slate-800/50 border-slate-800'
+                                                    }`}
+                                                >
+                                                    <div className={`p-2 rounded-full ${activeExerciseId === ex.id ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-800 text-slate-500'}`}>
+                                                        {ex.icon}
+                                                    </div>
+                                                    <div className="text-left flex-1">
+                                                        <div className="flex justify-between">
+                                                            <h4 className={`text-sm font-medium ${activeExerciseId === ex.id ? 'text-indigo-200' : 'text-slate-300'}`}>
+                                                                {ex.name}
+                                                            </h4>
+                                                            {ex.id.startsWith('custom') && (
+                                                                <div onClick={(e) => deleteCustomExercise(ex.id, e)} className="text-slate-600 hover:text-red-400 p-1">
+                                                                    <Icons.Trash2 className="w-3 h-3" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-1 mt-2 flex-wrap">
+                                                            {ex.phases.map((p, i) => (
+                                                                <span key={i} className="text-[10px] font-medium text-slate-500 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+                                                                    {p.label} {p.duration}s
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {settingsTab === 'goal' && (
+                                        <div className="space-y-6 py-2">
+                                            <div className="space-y-3">
+                                                <label className="text-sm font-medium text-slate-400">Stop condition</label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {['none', 'time', 'cycles'].map(m => (
+                                                        <button
+                                                            key={m}
+                                                            onClick={() => setGoalMode(m)}
+                                                            className={`py-2 px-3 rounded-lg text-sm capitalize transition-colors border ${
+                                                                goalMode === m ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+                                                            }`}
+                                                        >
+                                                            {m === 'none' ? 'Infinite' : m}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {goalMode !== 'none' && (
+                                                <div className="space-y-3 animate-in">
+                                                    <label className="text-sm font-medium text-slate-400">
+                                                        {goalMode === 'time' ? 'Duration (minutes)' : 'Number of Cycles'}
+                                                    </label>
+                                                    <div className="flex items-center gap-4">
+                                                        <input 
+                                                            type="range" 
+                                                            min="1" max={goalMode === 'time' ? "60" : "50"}
+                                                            value={goalValue} 
+                                                            onChange={(e) => setGoalValue(Number(e.target.value))}
+                                                            className="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                                        />
+                                                        <span className="text-xl font-light text-indigo-300 w-12 text-center">
+                                                            {goalValue}{goalMode === 'time' ? 'm' : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {settingsTab === 'create' && (
+                                        <div className="space-y-4">
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-slate-500 uppercase">Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={newExercise.name}
+                                                    onChange={(e) => setNewExercise({...newExercise, name: e.target.value})}
+                                                    placeholder="My Routine"
+                                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {['Inhale', 'Hold Top', 'Exhale', 'Hold Bot'].map((label) => {
+                                                    const key = label === 'Hold Top' ? 'holdTop' : label === 'Hold Bot' ? 'holdBottom' : label.toLowerCase();
+                                                    return (
+                                                        <div key={key} className="space-y-1">
+                                                            <label className="text-xs font-medium text-slate-500 uppercase">{label} (s)</label>
+                                                            <input 
+                                                                type="number" min="0" max="30"
+                                                                value={newExercise[key]}
+                                                                onChange={(e) => setNewExercise({...newExercise, [key]: e.target.value})}
+                                                                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:border-indigo-500 outline-none"
+                                                            />
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                            <button 
+                                                onClick={handleCreateExercise}
+                                                disabled={!newExercise.name}
+                                                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                                            >
+                                                Save & Select
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
         }
 
-        // Update the circle’s size based on the current phase and progress.
-        function updateCircle(phaseType, progress) {
-            let size;
-            if (phaseType === "inhale") {
-                size = minSize + (maxSize - minSize) * progress;
-            } else if (phaseType === "exhale") {
-                size = maxSize - (maxSize - minSize) * progress;
-            } else if (phaseType === "holdFull") {
-                size = maxSize;
-            } else if (phaseType === "holdEmpty") {
-                size = minSize;
-            } else if (phaseType === "reset") {
-                size = minSize;
-            }
-            circle.style.width = size + "px";
-            circle.style.height = size + "px";
-        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
 
-        function togglePause() {
-            isPaused = !isPaused;
-            pauseButton.textContent = isPaused ? "Resume" : "Pause";
-            if (!isPaused) {
-                lastTimestamp = performance.now();
-            }
-        }
-
-        function cancelExercise() {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            exerciseDiv.style.display = "none";
-            configDiv.style.display = "block";
-        }
-
-        function finishExercise() {
-            cancelAnimationFrame(animationFrameId);
-            phaseText.textContent = "Great job! Exercise complete.";
-            pauseButton.style.display = "none";
-            setTimeout(() => {
-                exerciseDiv.style.display = "none";
-                configDiv.style.display = "block";
-                pauseButton.textContent = "Pause";
-                pauseButton.style.display = "inline-block";
-            }, 3000);
-        }
-
-        /***********************
-         * SERVICE WORKER REG  *
-         ***********************/
+        // --- Service Worker Registration ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
                 navigator.serviceWorker.register('sw.js').then(function (registration) {
@@ -588,42 +571,6 @@
                 });
             });
         }
-
-        // Get reference to the toggle button once
-        const toggleBtn = document.getElementById('toggle-theme');
-
-        // Central function to update theme and button label
-        function updateTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            // Set button label to indicate the opposite action
-            toggleBtn.innerHTML = (theme === 'dark') ? "Light Mode" : "Dark Mode";
-            localStorage.setItem('theme', theme);
-        }
-
-        // Detect OS color scheme
-        function applyThemeBasedOnOS() {
-            const osTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
-                ? 'dark'
-                : 'light';
-            updateTheme(osTheme);
-        }
-
-        // Toggle theme on button click
-        toggleBtn.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
-            updateTheme(newTheme);
-        });
-
-        // Load user preference on page load
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            updateTheme(storedTheme);
-        } else {
-            applyThemeBasedOnOS();
-        }
-
     </script>
 </body>
-
 </html>
