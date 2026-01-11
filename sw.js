@@ -1,10 +1,10 @@
-const CACHE_NAME = 'breathing-app-v2.0';
+const CACHE_NAME = 'breathing-app-v2.2';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
   // External Libraries needed for offline use
-  'https://cdn.tailwindcss.com',
+  'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
   'https://unpkg.com/react@18/umd/react.production.min.js',
   'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
   'https://unpkg.com/@babel/standalone/babel.min.js',

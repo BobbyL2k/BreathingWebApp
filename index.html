@@ -12,8 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- Tailwind CSS -->
-    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
-     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -120,10 +119,22 @@
 
         // --- Main App Component ---
         function App() {
-            // Load state from local storage if available
+            // Load state from local storage and sanitize
             const [customExercises, setCustomExercises] = useState(() => {
-                const saved = localStorage.getItem('breathing_custom_exercises');
-                return saved ? JSON.parse(saved) : [];
+                try {
+                    const saved = localStorage.getItem('breathing_custom_exercises');
+                    if (!saved) return [];
+                    const parsed = JSON.parse(saved);
+                    // Sanitize: If 'icon' exists and is an object (JSX serialized), remove it
+                    // This fixes the crash for users who already have broken data
+                    return parsed.map(ex => {
+                        const { icon, ...rest } = ex; // Strip icon property
+                        return { ...rest }; 
+                    });
+                } catch (e) {
+                    console.error("Failed to parse custom exercises", e);
+                    return [];
+                }
             });
 
             const [activeExerciseId, setActiveExerciseId] = useState('4-7-8');
@@ -275,7 +286,8 @@
                     id: `custom-${Date.now()}`,
                     name: newExercise.name,
                     description: 'Custom Sequence',
-                    icon: <Icons.Coffee className="w-5 h-5" />,
+                    // REMOVED: icon: <Icons.Coffee ... /> which causes serialization issues
+                    // Added: iconName for future proofing if needed, but we just fallback in render now
                     color: 'from-slate-800 to-slate-900',
                     ringColor: 'border-slate-700',
                     phases,
@@ -446,7 +458,7 @@
                                                     }`}
                                                 >
                                                     <div className={`p-2 rounded-full ${activeExerciseId === ex.id ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-800 text-slate-500'}`}>
-                                                        {ex.icon}
+                                                        {ex.icon ? ex.icon : <Icons.Coffee className="w-5 h-5" />}
                                                     </div>
                                                     <div className="text-left flex-1">
                                                         <div className="flex justify-between">
