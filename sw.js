@@ -1,4 +1,4 @@
-const CACHE_NAME = 'breathing-app-v2.2';
+const CACHE_NAME = 'breathing-app-v2.3';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,7 +9,7 @@ const urlsToCache = [
   'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
   'https://unpkg.com/@babel/standalone/babel.min.js',
   // Background texture
-  'https://www.transparenttextures.com/patterns/stardust.png'
+  './stardust.png'
 ];
 
 self.addEventListener('install', event => {
